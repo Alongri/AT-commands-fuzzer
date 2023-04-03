@@ -1,33 +1,66 @@
+
+"""
+***********************************************************************************
+****                       Author: Alon Gritsovsky                             ****
+**** Description: This fuzzing program mutates different packets to IOT device ****
+***********************************************************************************
+"""
+import pyradamsa
 import socket
-import random
+import serial
+import os
+import glob
 
-TCP_IP = '172.25.14.53' # IP address of the server
-TCP_PORT = 80 # Port number to use
 
-# Create a TCP socket object
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+i = 0
+number_of_packets = 12
+iteration_number = 1
+rad = pyradamsa.Radamsa()
 
-# Bind the socket to the address and port
-s.bind((TCP_IP, TCP_PORT))
+server_IP = input("Enter IP address of the server: ") # IP OF LOCAL SERVER: "192.168.2.1"
+server_PORT = int(input("Enter Source Port Number: ")) # PORT: 31337
 
-# Listen for incoming connections
-s.listen(1)
 
-print('Waiting for client connection...')
 
-# Accept a client connection
-conn, addr = s.accept()
-print('Client connected:', addr)
+# create an INET, STREAMing socket
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# bind the socket to a public host, and a well-known port
+serversocket.bind((server_IP, server_PORT))
+# become a server socket
+serversocket.listen(5)
+# wait for a connection from the client
+client, address = serversocket.accept()
 
-# Send random packets to the client
+
+print(f"A client is connected to the server on port {server_PORT}.")
+
+
+folder_path = "/root/Documents/fuzzer/fuzzer_packet"
+packets = []
+
+for file_path in glob.glob(os.path.join(folder_path, "*.txt")):
+    with open(file_path, "r") as f:
+        packet = bytearray.fromhex(f.read())
+    packets.append(packet)
+
+
 while True:
-    # Generate a random packet of data
-    packet = bytes([random.randint(0, 255) for _ in range(10)])
-    print('Sending packet:', packet)
-    # Send the packet to the client
-    conn.send(packet)
-    # Time before sending the next packet
-    time.sleep(1)
+    raw_packet = packets[i]
+    print("Packet before mutation:")
+    print(raw_packet)
+    mutated_packet = rad.fuzz(raw_packet)
+    print("Packet after mutation:")
+    print(mutated_packet)
+    client.sendall(mutated_packet)
+    print(f"Packet number ---> {iteration_number} was sent")
+    iteration_number += 1
+    i += 1
+    if i % number_of_packets == 0:
+        i = 0
 
+
+
+# Close the socket connection
+client.close()
 
 
