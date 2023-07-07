@@ -32,7 +32,9 @@ This fuzzing program is designed to mutate different packets and send them to an
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE).
+
+Feel free to use and modify the script according to your needs.
 
 ##Author
 Alon Gritsovsky
